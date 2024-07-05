@@ -12,7 +12,7 @@ env:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -23,6 +23,7 @@ jobs:
           node-version: '20.14.0'
 
       - name: Install dependencies
+        working-directory: ${{ env.NODE_WORKDIR }}
         run: npm install
 
       - name: Configure AWS credentials
