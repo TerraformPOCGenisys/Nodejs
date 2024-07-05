@@ -1,0 +1,47 @@
+name: Node JS CI Build and Docker Publish to ECR
+
+on:
+  push:
+    branches:
+      - main  # Adjust branch name as needed
+  workflow_dispatch:     
+
+env:
+  NODE_WORKDIR: node
+  
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.14.0'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1  
+
+      - name: Docker Build and Publish to ECR
+        working-directory: ${{ env.NODE_WORKDIR }}
+        env:
+          AWS_REGION: ap-south-1
+          AWS_ACCOUNT_ID: 352730764496
+          ECR_REPO: backend-app
+        run: |
+          sudo apt-get update && sudo apt-get install -y awscli
+
+          aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com
+
+          docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:v1 .
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:v1
