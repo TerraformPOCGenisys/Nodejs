@@ -12,11 +12,20 @@ const corsOptions = {
 
 const { Client } = pg;
 
+//to be used for local
+// const client = new Client({
+//   user: 'postgres',
+//   host: 'db',
+//   database: 'postgres',
+//   password: '1234',
+//   port: 5432,
+// });
+
 const client = new Client({
   user: 'postgres',
-  host: 'db',
+  host: 'poc-stag-db.ch3gxhmoa0nu.ap-south-1.rds.amazonaws.com',
   database: 'postgres',
-  password: '1234',
+  password: 'qwertyuhgfde5dfw',
   port: 5432,
 });
 
@@ -45,10 +54,12 @@ app.use(function (req, res, next) {
 app.get('/api', (req, res) => res.send('Hello World!'));
 
 app.get('/api/all', async (req, res) => {
-    try {
+  console.info("Request to fetch all");
+  try {
       const response = await client.query(`SELECT * FROM users`);
       
       if(response){
+        console.log(response.rows);
         res.status(200).send(response.rows);
       }
       
@@ -59,7 +70,8 @@ app.get('/api/all', async (req, res) => {
   });
 
   app.post('/api/form', async (req, res) => {
-    try {
+  console.info("Request to save");
+  try {
       const name  = req.body.name;
       const email = req.body.email;
       const age   = req.body.age;
