@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 // const cors = require('cors');
 const corsOptions = {
-  origin: 'http://localhost:5173/',
+  origin: 'https://frontend-app.cmrinfo.in/',
   credentials: true,
   optionSuccessStatus: 200
 }
@@ -42,15 +42,15 @@ createTable();
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 
-// // app.use(function (req, res, next) {
-// //   res.header('Access-Control-Allow-Origin', "http://localhost:5173");
-// //   res.header('Access-Control-Allow-Headers', true);
-// //   res.header('Access-Control-Allow-Credentials', true);
-// //   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-// //   next();
-// // });
+app.use(function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', "https://frontend-app.cmrinfo.in");
+  res.header('Access-Control-Allow-Headers', true);
+  res.header('Access-Control-Allow-Credentials', true);
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  next();
+});
 app.get('/api', (req, res) => res.send('Hello World!'));
 
 app.get('/api/all', async (req, res) => {
