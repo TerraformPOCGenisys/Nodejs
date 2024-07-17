@@ -1,8 +1,16 @@
 import pg from 'pg';
 import express from 'express';
-import bodyParser from 'body-parser';
 import cors from 'cors';
-// const cors = require('cors');
+
+import session from 'express-session';
+import passport from 'passport';
+import OAuth2Strategy from 'passport-oauth2';
+
+// const session = require('express-session');
+// const passport = require('passport');
+// const OAuth2Strategy = require('passport-oauth2');
+// const axios = require('axios');
+
 const corsOptions = {
   origin: 'https://frontend-app.cmrinfo.in/',
   credentials: true,
@@ -43,6 +51,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
+
+// Configure session middleware
+app.use(session({ secret: 'your_secret_here', resave: false, saveUninitialized: false }));
+// Initialize Passport and session middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', "https://frontend-app.cmrinfo.in");
@@ -85,6 +99,42 @@ app.get('/api/all', async (req, res) => {
       res.status(500).send(error);
       console.log(error);
     }    
+  });
+
+  passport.use('nhs-login', new OAuth2Strategy({
+    authorizationURL: 'https://auth.sandpit.signin.nhs.uk/as/authorization.oauth2',
+    tokenURL: 'https://auth.sandpit.signin.nhs.uk/as/token.oauth2',
+    clientID: 'your_client_id_here',
+    clientSecret: 'your_client_secret_here',
+    callbackURL: 'http://localhost:3000/auth/nhs-login/callback'
+  },
+  // Verify callback
+  async function(accessToken, refreshToken, profile, cb) {
+    // Here you can optionally fetch user profile details from NHS login
+    // Store tokens securely, for example in session or database
+    return cb(null, { accessToken, refreshToken });
+  }
+));
+
+// Serialize user into session
+passport.serializeUser(function(user, cb) {
+  cb(null, user);
+});
+
+// Deserialize user from session
+passport.deserializeUser(function(obj, cb) {
+  cb(null, obj);
+});
+
+// Endpoint to initiate NHS login authentication
+app.get('/auth/nhs-login',  passport.authenticate('nhs-login', { scope: ['profile'] }));
+
+// Callback endpoint after NHS login authentication
+app.get('/auth/nhs-login/callback',
+  passport.authenticate('nhs-login', { failureRedirect: '/' }),
+  function(req, res) {
+    // Successful authentication, redirect to frontend or send response
+    res.redirect('http://localhost:3001/profile');
   });
 
   app.listen(3000, () => console.log(`App running on port 3000.`));
